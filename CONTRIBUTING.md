@@ -1,4 +1,4 @@
-# Contributing to Kafka Streams Processing Error Handling
+# Contributing to Kafka Streams Dead Letter Queue
 
 Welcome to our contribution guide.
 This guide will help you understand the process and expectations for contributing.
