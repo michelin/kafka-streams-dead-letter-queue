@@ -47,7 +47,7 @@ public class KafkaStreamsApp {
                     return value.getNumberOfTires() >= 10;
                 }) // InvalidDeliveryException or NullPointerException
                 .mapValues(KafkaStreamsApp::parseToJson)
-                .to("filtered_delivery_booked_dsl_topic", Produced.with(Serdes.String(), Serdes.String()));
+                .to("filtered_delivery_booked_topic", Produced.with(Serdes.String(), Serdes.String()));
     }
 
     private static DeliveryBooked parseFromJson(String value) {

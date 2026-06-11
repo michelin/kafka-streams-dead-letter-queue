@@ -36,8 +36,10 @@ import org.apache.kafka.streams.TestOutputTopic;
 import org.apache.kafka.streams.TopologyTestDriver;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+@DisplayName("Kafka Streams DLQ routing by exception type")
 class KafkaStreamsAppTest {
     private TopologyTestDriver testDriver;
     private TestInputTopic<String, String> inputTopic;
@@ -78,8 +80,9 @@ class KafkaStreamsAppTest {
     }
 
     @Test
+    @DisplayName("Routes records to DLQ topics based on exception type")
     void shouldContinueOnInvalidDeliveryAndNullPointerExceptions() {
-        // "numberOfTires" is negative. This will throw an InvalidDeliveryException
+        // "numberOfTires" is negative. This will be caught by the handler and routed to DLQ as InvalidDeliveryException
         String deliveryNegativeNumber = """
                 {
                   "deliveryId": "DEL67145",
@@ -90,7 +93,7 @@ class KafkaStreamsAppTest {
                 """;
         inputTopic.pipeInput("DEL67145", deliveryNegativeNumber);
 
-        // "numberOfTires" is missing. This will throw a NullPointerException
+        // "numberOfTires" is missing. This will be caught by the handler and routed to DLQ as NullPointerException
         String deliveryMissingNumber = """
                 {
                   "deliveryId": "DEL73148",
@@ -100,7 +103,7 @@ class KafkaStreamsAppTest {
                 """;
         inputTopic.pipeInput("DEL73148", deliveryMissingNumber);
 
-        // This will throw an InvalidJsonException
+        // This will throw a JsonSyntaxException
         inputTopic.pipeInput("KABOOM", "KABOOM");
 
         List<KeyValue<byte[], byte[]>> invalidDeliveryExceptionDlqResults =
