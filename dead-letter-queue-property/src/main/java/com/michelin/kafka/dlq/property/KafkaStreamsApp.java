@@ -29,6 +29,7 @@ import java.util.Properties;
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.KafkaStreams;
 import org.apache.kafka.streams.StreamsBuilder;
+import org.apache.kafka.streams.errors.LogAndContinueProcessingExceptionHandler;
 import org.apache.kafka.streams.errors.StreamsUncaughtExceptionHandler;
 import org.apache.kafka.streams.kstream.Consumed;
 import org.apache.kafka.streams.kstream.Produced;
@@ -43,8 +44,7 @@ public class KafkaStreamsApp {
                 BOOTSTRAP_SERVERS_CONFIG,
                 Optional.ofNullable(System.getenv("BOOTSTRAP_SERVERS")).orElse("localhost:9092"));
         properties.put(
-                PROCESSING_EXCEPTION_HANDLER_CLASS_CONFIG,
-                "org.apache.kafka.streams.errors.LogAndContinueProcessingExceptionHandler");
+                PROCESSING_EXCEPTION_HANDLER_CLASS_CONFIG, LogAndContinueProcessingExceptionHandler.class.getName());
         // Define the DLQ property to enable the DLQ functionality.
         properties.put(ERRORS_DEAD_LETTER_QUEUE_TOPIC_NAME_CONFIG, "dlq_topic");
 
