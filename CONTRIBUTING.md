@@ -21,14 +21,14 @@ If no open issue addresses your problem, please open a new one and include:
 
 ### Pull Requests
 
-To contribute to Kafka Streams Processing Error Handling:
+To contribute to Kafka Streams Dead Letter Queue:
 
 - Fork the repository to your own GitHub account
 - Clone the project to your machine
 - Create a branch from the `main` branch
 - Make your changes and commit them to your branch
 - Push your changes to your fork
-- Open a merge request to the `main` branch of the Kafka Streams Processing Error Handling repository so that we can review your changes
+- Open a pull request to the `main` branch of the Kafka Streams Dead Letter Queue repository so that we can review your changes
 
 ## Style Guide
 

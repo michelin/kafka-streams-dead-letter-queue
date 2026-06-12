@@ -63,7 +63,7 @@ class KafkaStreamsAppTest {
         inputTopic =
                 testDriver.createInputTopic("delivery_booked_topic", new StringSerializer(), new StringSerializer());
         outputTopic = testDriver.createOutputTopic(
-                "filtered_delivery_booked_dsl_topic", new StringDeserializer(), new StringDeserializer());
+                "filtered_delivery_booked_topic", new StringDeserializer(), new StringDeserializer());
         dlqTopic = testDriver.createOutputTopic("dlq-topic", new ByteArrayDeserializer(), new ByteArrayDeserializer());
     }
 
@@ -75,7 +75,7 @@ class KafkaStreamsAppTest {
     @Test
     @DisplayName("Writes both invalid records to DLQ with original key/value")
     void shouldWriteDlqAfterSingleInvalidInput() {
-        // "numberOfTires" is negative. This will throw an InvalidDeliveryException
+        // "numberOfTires" is negative. This will be caught by the handler and routed to DLQ as InvalidDeliveryException
         String deliveryNegativeNumber = """
                 {
                   "deliveryId": "DEL67145",
@@ -86,7 +86,7 @@ class KafkaStreamsAppTest {
                 """;
         inputTopic.pipeInput("DEL67145", deliveryNegativeNumber);
 
-        // "numberOfTires" is missing. This will throw a NullPointerException
+        // "numberOfTires" is missing. This will be caught by the handler and routed to DLQ as NullPointerException
         String deliveryMissingNumber = """
                 {
                   "deliveryId": "DEL73148",
