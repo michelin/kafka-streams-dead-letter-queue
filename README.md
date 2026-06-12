@@ -13,3 +13,18 @@
 Code sample for Kafka Streams Dead Letter Queue ([KIP-1034](https://cwiki.apache.org/confluence/display/KAFKA/KIP-1034%3A+Dead+letter+queue+in+Kafka+Streams)).
 
 </div>
+
+## Prerequisites
+
+- Java 25
+- Maven
+- Docker
+
+## Examples
+
+- Dead Letter Queue with [`errors.dead.letter.queue.topic.name` property](/dead-letter-queue-property).
+- Dead Letter Queue with [custom processing exception handler](/exception-handlers).
+
+## Michelin IT Blog
+
+_Soon to be published._
