@@ -21,6 +21,7 @@ package com.michelin.kafka.dlq.property;
 import static org.apache.kafka.streams.StreamsConfig.APPLICATION_ID_CONFIG;
 import static org.apache.kafka.streams.StreamsConfig.BOOTSTRAP_SERVERS_CONFIG;
 import static org.apache.kafka.streams.StreamsConfig.ERRORS_DEAD_LETTER_QUEUE_TOPIC_NAME_CONFIG;
+import static org.apache.kafka.streams.StreamsConfig.PROCESSING_EXCEPTION_HANDLER_CLASS_CONFIG;
 
 import com.google.gson.Gson;
 import java.util.Optional;
@@ -41,6 +42,9 @@ public class KafkaStreamsApp {
         properties.put(
                 BOOTSTRAP_SERVERS_CONFIG,
                 Optional.ofNullable(System.getenv("BOOTSTRAP_SERVERS")).orElse("localhost:9092"));
+        properties.put(
+                PROCESSING_EXCEPTION_HANDLER_CLASS_CONFIG,
+                "org.apache.kafka.streams.errors.LogAndContinueProcessingExceptionHandler");
         // Define the DLQ property to enable the DLQ functionality.
         properties.put(ERRORS_DEAD_LETTER_QUEUE_TOPIC_NAME_CONFIG, "dlq_topic");
 
