@@ -46,7 +46,6 @@ public class KafkaStreamsApp {
                 Optional.ofNullable(System.getenv("BOOTSTRAP_SERVERS")).orElse("localhost:9092"));
         properties.put(
                 PROCESSING_EXCEPTION_HANDLER_CLASS_CONFIG, LogAndContinueProcessingExceptionHandler.class.getName());
-        // Define the DLQ property to enable the DLQ functionality.
         properties.put(ERRORS_DEAD_LETTER_QUEUE_TOPIC_NAME_CONFIG, "dlq_topic");
 
         StreamsBuilder streamsBuilder = new StreamsBuilder();
