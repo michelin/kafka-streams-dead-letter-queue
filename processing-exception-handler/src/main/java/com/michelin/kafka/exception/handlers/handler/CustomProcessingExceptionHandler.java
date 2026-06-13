@@ -18,7 +18,6 @@
  */
 package com.michelin.kafka.exception.handlers.handler;
 
-import com.google.gson.JsonSyntaxException;
 import com.michelin.kafka.exception.handlers.DeliveryBooked;
 import com.michelin.kafka.exception.handlers.InvalidDeliveryException;
 import java.util.List;
@@ -30,14 +29,8 @@ import org.apache.kafka.streams.processor.api.Record;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class DlqExceptionTypeProcessingHandler implements ProcessingExceptionHandler {
-    private static final Logger log = LoggerFactory.getLogger(DlqExceptionTypeProcessingHandler.class);
-
-    protected String jsonExceptionDeadLetterQueueTopic;
-
-    protected String invalidDeliveryExceptionDeadLetterQueueTopic;
-
-    protected String genericExceptionDeadLetterQueueTopic;
+public class CustomProcessingExceptionHandler implements ProcessingExceptionHandler {
+    private static final Logger log = LoggerFactory.getLogger(CustomProcessingExceptionHandler.class);
 
     @Override
     public Response handleError(ErrorHandlerContext context, Record<?, ?> message, Exception exception) {
@@ -51,27 +44,32 @@ public class DlqExceptionTypeProcessingHandler implements ProcessingExceptionHan
                     context.offset(),
                     exception);
         }
-        if (exception instanceof JsonSyntaxException) {
+
+        if (message.value() instanceof DeliveryBooked deliveryBooked && deliveryBooked.numberOfTires() == null) {
             return Response.resume(List.of(new ProducerRecord<>(
-                    jsonExceptionDeadLetterQueueTopic,
-                    ((String) message.key()).getBytes(),
-                    ((String) message.value()).getBytes())));
-        } else if (exception instanceof InvalidDeliveryException) {
-            return Response.resume(List.of(new ProducerRecord<>(
-                    invalidDeliveryExceptionDeadLetterQueueTopic,
-                    ((String) message.key()).getBytes(),
-                    ("Invalid deliveryBooked " + ((DeliveryBooked) message.value()).getDeliveryId()).getBytes())));
+                    "null-number-of-tires-dlq-topic", context.sourceRawKey(), context.sourceRawValue())));
         }
+
+        if (exception instanceof InvalidDeliveryException) {
+            return Response.resume(List.of(new ProducerRecord<>(
+                    "invalid-delivery-dlq-topic",
+                    ((String) message.key()).getBytes(),
+                    ("Invalid deliveryBooked " + ((DeliveryBooked) message.value()).deliveryId()).getBytes())));
+        }
+
+        if (context.processorNodeId().equals("select-key-processor")) {
+            return Response.resume(List.of(new ProducerRecord<>(
+                    "select-key-processor-dlq-topic", context.sourceRawKey(), context.sourceRawValue())));
+        }
+
         return Response.resume(List.of(new ProducerRecord<>(
-                genericExceptionDeadLetterQueueTopic,
+                "default-dlq-topic",
                 ((String) message.key()).getBytes(),
                 ("An exception occurred " + exception.getMessage()).getBytes())));
     }
 
     @Override
     public void configure(Map<String, ?> map) {
-        jsonExceptionDeadLetterQueueTopic = (String) map.get("jsonExceptionDeadLetterQueueTopic");
-        invalidDeliveryExceptionDeadLetterQueueTopic = (String) map.get("invalidDeliveryExceptionDeadLetterQueueTopic");
-        genericExceptionDeadLetterQueueTopic = (String) map.get("genericExceptionDeadLetterQueueTopic");
+        // Do nothing
     }
 }

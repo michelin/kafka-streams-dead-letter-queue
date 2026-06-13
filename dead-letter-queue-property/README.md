@@ -1,45 +1,21 @@
-# dead-letter-queue-property
+# Dead Letter Queue Property
 
-Kafka Streams DSL sample that uses the built-in DLQ property:
-
-- `errors.dead.letter.queue.topic.name`
+This module demonstrates how to use the `errors.dead.letter.queue.topic.name` property to define a dead letter queue topic for records that fail processing.
 
 ## Prerequisites
 
+To compile and run this demo, you’ll need:
+
 - Java 25
 - Maven
-
-## What this module does
-
-- Consumes from `delivery_booked_topic`
-- Parses JSON into `DeliveryBooked`
-- Filters records where `numberOfTires >= 10`
-- Produces valid records to `filtered_delivery_booked_topic`
-- Sends failed records to `dlq-topic` when a processing exception occurs and the handler is set to continue
-
-In tests, `LogAndContinueProcessingExceptionHandler` is configured together with
-`errors.dead.letter.queue.topic.name=dlq-topic`.
-
-## Tested behavior
-
-`src/test/java/com/michelin/kafka/dlq/property/KafkaStreamsAppTest.java` verifies that:
-
-- an `InvalidDeliveryException` record goes to DLQ
-- a `NullPointerException` record goes to DLQ
-
-## Run tests
-
-From repository root:
-
-```zsh
-mvn -pl dead-letter-queue-property test
-```
+- Docker
 
 ## Running the Application
 
 To run the application manually:
 
 - Start a [Confluent Platform](https://docs.confluent.io/platform/current/get-started/platform-quickstart.html#step-1-download-and-start-cp) in a Docker environment.
+- Create a topic named `delivery-booked-topic`.
 - Start the Kafka Streams application.
 
 To run the application in Docker, use the following command:
@@ -52,55 +28,19 @@ This will start the following services in Docker:
 
 - Kafka Broker
 - Control Center
-- init-kafka (topic bootstrap)
-- Kafka Streams dead letter queue property example
+- Kafka Streams Dead Letter Queue Property
 
 ## Try It Out
 
-Using Control Center at `http://localhost:9021`, produce records to `delivery_booked_topic`.
+Using the [Kafkagen](https://github.com/michelin/kafkagen) `produce` command, you can produce `DeliveryBooked` events to the `delivery-booked-topic` topic.
 
-Example valid record:
-
-```json
-{
-  "deliveryId": "DEL12345",
-  "truckId": "TRK56789",
-  "numberOfTires": 18,
-  "destination": "Bordeaux"
-}
+```bash
+kafkagen produce -f ../.kafkagen/default-record.json
 ```
 
-To trigger the generic DLQ branch, produce a record with missing `numberOfTires` (triggers `NullPointerException` → `dlq-topic`):
+To trigger dead letter queue routing via the `errors.dead.letter.queue.topic.name` property,
+produce records with a missing `numberOfTires` field to route to `default-dlq-topic`.
 
-```json
-{
-  "deliveryId": "DEL12345",
-  "truckId": "TRK56789",
-  "destination": "Bordeaux"
-}
+```bash
+kafkagen produce -f ../.kafkagen/no-tires-record.json
 ```
-
-To trigger `invalid-delivery-exception-dlq-topic`, produce a record with a negative `numberOfTires` (triggers `InvalidDeliveryException` → `dlq-topic`):
-
-```json
-{
-  "deliveryId": "DEL67145",
-  "truckId": "TRK34567",
-  "numberOfTires": -1,
-  "destination": "Marseille"
-}
-```
-
-To trigger `json-exception-dlq-topic`, produce an invalid JSON value (triggers `JsonSyntaxException` → `dlq-topic`):
-
-```json
-{
-  "deliveryId": "DEL67145",
-  "truckId": "TRK34567",
-  "numberOfTires": -1,
-  "destination": "Marseille"
-}
-```
-KABOOM
-```
-

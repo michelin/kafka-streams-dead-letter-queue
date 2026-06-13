@@ -57,14 +57,12 @@ services:
     entrypoint: ['/bin/bash', '-c']
     command: |
       'cub kafka-ready -b broker:29092 1 300 && \
-      kafka-topics --bootstrap-server broker:29092 --create --topic delivery_booked_topic && \
-      kafka-topics --bootstrap-server broker:29092 --create --topic filtered_delivery_booked_topic && \
-      kafka-topics --bootstrap-server broker:29092 --create --topic dlq_topic'
+      kafka-topics --bootstrap-server broker:29092 --create --topic delivery-booked-topic'
 
-  kafka-streams-dead-letter-queue-dlq-property:
-    image: michelin/kafka-streams-dead-letter-queue:dlq-property-1.0.0
-    hostname: kafka-streams-dead-letter-queue-dlq-property
-    container_name: kafka-streams-dead-letter-queue-dlq-property
+  kafka-streams-dead-letter-queue-property:
+    image: michelin/kafka-streams-dead-letter-queue:dead-letter-queue-property-1.0.0
+    hostname: kafka-streams-dead-letter-queue-property
+    container_name: kafka-streams-dead-letter-queue-property
     networks:
       - kafka-streams-dead-letter-queue-network
     depends_on:

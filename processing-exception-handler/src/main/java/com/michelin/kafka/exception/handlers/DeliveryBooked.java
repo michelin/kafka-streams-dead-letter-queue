@@ -18,41 +18,4 @@
  */
 package com.michelin.kafka.exception.handlers;
 
-public class DeliveryBooked {
-    private String deliveryId;
-    private String truckId;
-    private Integer numberOfTires;
-    private String destination;
-
-    public String getDeliveryId() {
-        return deliveryId;
-    }
-
-    public void setDeliveryId(String deliveryId) {
-        this.deliveryId = deliveryId;
-    }
-
-    public String getDestination() {
-        return destination;
-    }
-
-    public void setDestination(String destination) {
-        this.destination = destination;
-    }
-
-    public Integer getNumberOfTires() {
-        return numberOfTires;
-    }
-
-    public void setNumberOfTires(Integer numberOfTires) {
-        this.numberOfTires = numberOfTires;
-    }
-
-    public String getTruckId() {
-        return truckId;
-    }
-
-    public void setTruckId(String truckId) {
-        this.truckId = truckId;
-    }
-}
+public record DeliveryBooked(String deliveryId, String truckId, Integer numberOfTires, String destination) {}

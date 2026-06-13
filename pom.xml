@@ -9,7 +9,7 @@
 
     <modules>
         <module>dead-letter-queue-property</module>
-        <module>exception-handlers</module>
+        <module>processing-exception-handler</module>
     </modules>
 
     <properties>

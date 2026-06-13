@@ -57,16 +57,12 @@ services:
     entrypoint: ['/bin/bash', '-c']
     command: |
       'cub kafka-ready -b broker:29092 1 300 && \
-      kafka-topics --bootstrap-server broker:29092 --create --topic delivery_booked_topic && \
-      kafka-topics --bootstrap-server broker:29092 --create --topic filtered_delivery_booked_topic && \
-      kafka-topics --bootstrap-server broker:29092 --create --topic json-exception-dlq-topic && \
-      kafka-topics --bootstrap-server broker:29092 --create --topic invalid-delivery-exception-dlq-topic && \
-      kafka-topics --bootstrap-server broker:29092 --create --topic generic-exception-dlq-topic'
+      kafka-topics --bootstrap-server broker:29092 --create --topic delivery-booked-topic'
 
-  kafka-streams-dead-letter-queue-exception-handlers:
-    image: michelin/kafka-streams-dead-letter-queue:exception-handlers-1.0.0
-    hostname: kafka-streams-dead-letter-queue-exception-handlers
-    container_name: kafka-streams-dead-letter-queue-exception-handlers
+  kafka-streams-dead-letter-queue-processing-exception-handler:
+    image: michelin/kafka-streams-dead-letter-queue:processing-exception-handler-1.0.0
+    hostname: kafka-streams-dead-letter-queue-processing-exception-handler
+    container_name: kafka-streams-dead-letter-queue-processing-exception-handler
     networks:
       - kafka-streams-dead-letter-queue-network
     depends_on:

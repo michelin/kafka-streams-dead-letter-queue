@@ -32,6 +32,7 @@ import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.errors.LogAndContinueProcessingExceptionHandler;
 import org.apache.kafka.streams.errors.StreamsUncaughtExceptionHandler;
 import org.apache.kafka.streams.kstream.Consumed;
+import org.apache.kafka.streams.kstream.Named;
 import org.apache.kafka.streams.kstream.Produced;
 
 public class KafkaStreamsApp {
@@ -62,17 +63,18 @@ public class KafkaStreamsApp {
     }
 
     public static void buildTopology(StreamsBuilder streamsBuilder) {
-        streamsBuilder.stream("delivery_booked_topic", Consumed.with(Serdes.String(), Serdes.String()))
+        streamsBuilder.stream("delivery-booked-topic", Consumed.with(Serdes.String(), Serdes.String()))
                 .mapValues(KafkaStreamsApp::parseFromJson) // JsonSyntaxException
+                .selectKey((_, value) -> value.deliveryId().concat(value.truckId()), Named.as("select-key-processor"))
                 .filter((_, value) -> {
-                    if (value.getNumberOfTires() < 0) {
+                    if (value.numberOfTires() < 0) {
                         throw new InvalidDeliveryException("Number of tires cannot be negative");
                     }
 
-                    return value.getNumberOfTires() >= 10;
+                    return value.numberOfTires() >= 10;
                 }) // InvalidDeliveryException or NullPointerException
                 .mapValues(KafkaStreamsApp::parseToJson)
-                .to("filtered_delivery_booked_topic", Produced.with(Serdes.String(), Serdes.String()));
+                .to("filtered-delivery-booked-topic", Produced.with(Serdes.String(), Serdes.String()));
     }
 
     private static DeliveryBooked parseFromJson(String value) {

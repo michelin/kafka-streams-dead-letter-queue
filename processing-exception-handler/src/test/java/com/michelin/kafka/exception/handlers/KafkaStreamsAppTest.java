@@ -16,25 +16,24 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package com.michelin.kafka.dlq.property;
+package com.michelin.kafka.exception.handlers;
 
 import static org.apache.kafka.streams.StreamsConfig.APPLICATION_ID_CONFIG;
 import static org.apache.kafka.streams.StreamsConfig.BOOTSTRAP_SERVERS_CONFIG;
-import static org.apache.kafka.streams.StreamsConfig.ERRORS_DEAD_LETTER_QUEUE_TOPIC_NAME_CONFIG;
 import static org.apache.kafka.streams.StreamsConfig.PROCESSING_EXCEPTION_HANDLER_CLASS_CONFIG;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.michelin.kafka.exception.handlers.handler.CustomProcessingExceptionHandler;
+import java.util.List;
 import java.util.Properties;
 import org.apache.kafka.common.serialization.ByteArrayDeserializer;
-import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
+import org.apache.kafka.streams.KeyValue;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.TestInputTopic;
 import org.apache.kafka.streams.TestOutputTopic;
 import org.apache.kafka.streams.TopologyTestDriver;
-import org.apache.kafka.streams.errors.LogAndContinueProcessingExceptionHandler;
-import org.apache.kafka.streams.test.TestRecord;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -42,17 +41,18 @@ import org.junit.jupiter.api.Test;
 class KafkaStreamsAppTest {
     private TopologyTestDriver testDriver;
     private TestInputTopic<String, String> inputTopic;
-    private TestOutputTopic<String, String> outputTopic;
-    private TestOutputTopic<byte[], byte[]> dlqTopic;
+    private TestOutputTopic<byte[], byte[]> nullNumberOfTiresDlqTopic;
+    private TestOutputTopic<byte[], byte[]> invalidDeliveryDlqTopic;
+    private TestOutputTopic<byte[], byte[]> selectKeyProcessorDlqTopic;
+    private TestOutputTopic<byte[], byte[]> defaultDlqTopic;
 
     @BeforeEach
     void setUp() {
         Properties properties = new Properties();
-        properties.setProperty(APPLICATION_ID_CONFIG, "dead-letter-queue-property-test");
+        properties.setProperty(APPLICATION_ID_CONFIG, "dead-letter-queue-processing-exception-handler-app-test");
         properties.setProperty(BOOTSTRAP_SERVERS_CONFIG, "dummy:1234");
         properties.setProperty(
-                PROCESSING_EXCEPTION_HANDLER_CLASS_CONFIG, LogAndContinueProcessingExceptionHandler.class.getName());
-        properties.setProperty(ERRORS_DEAD_LETTER_QUEUE_TOPIC_NAME_CONFIG, "default-dlq-topic");
+                PROCESSING_EXCEPTION_HANDLER_CLASS_CONFIG, CustomProcessingExceptionHandler.class.getName());
 
         StreamsBuilder streamsBuilder = new StreamsBuilder();
         KafkaStreamsApp.buildTopology(streamsBuilder);
@@ -60,9 +60,13 @@ class KafkaStreamsAppTest {
 
         inputTopic =
                 testDriver.createInputTopic("delivery-booked-topic", new StringSerializer(), new StringSerializer());
-        outputTopic = testDriver.createOutputTopic(
-                "filtered-delivery-booked-topic", new StringDeserializer(), new StringDeserializer());
-        dlqTopic = testDriver.createOutputTopic(
+        nullNumberOfTiresDlqTopic = testDriver.createOutputTopic(
+                "null-number-of-tires-dlq-topic", new ByteArrayDeserializer(), new ByteArrayDeserializer());
+        invalidDeliveryDlqTopic = testDriver.createOutputTopic(
+                "invalid-delivery-dlq-topic", new ByteArrayDeserializer(), new ByteArrayDeserializer());
+        selectKeyProcessorDlqTopic = testDriver.createOutputTopic(
+                "select-key-processor-dlq-topic", new ByteArrayDeserializer(), new ByteArrayDeserializer());
+        defaultDlqTopic = testDriver.createOutputTopic(
                 "default-dlq-topic", new ByteArrayDeserializer(), new ByteArrayDeserializer());
     }
 
@@ -72,53 +76,51 @@ class KafkaStreamsAppTest {
     }
 
     @Test
-    void shouldFilterDeliveriesAndSendInvalidToDlq() {
-        inputTopic.pipeInput("DEL001", """
+    void shouldRouteToCorrectDlq() {
+        String nullNumberOfTires = """
                 {
                   "deliveryId": "DEL001",
                   "truckId": "TRK001",
-                  "numberOfTires": 18,
                   "destination": "Bordeaux"
                 }
-                """);
+                """;
+        inputTopic.pipeInput("DEL001", nullNumberOfTires);
 
-        inputTopic.pipeInput("DEL002", """
+        String negativeNumberOfTires = """
                 {
                   "deliveryId": "DEL002",
                   "truckId": "TRK002",
                   "numberOfTires": -3,
                   "destination": "Paris"
                 }
-                """);
+                """;
+        inputTopic.pipeInput("DEL002", negativeNumberOfTires);
 
-        inputTopic.pipeInput("DEL003", """
+        String missingDeliveryId = """
                 {
-                  "deliveryId": "DEL003",
                   "truckId": "TRK003",
-                  "numberOfTires": 10,
+                  "numberOfTires": 4,
                   "destination": "Lyon"
                 }
-                """);
+                """;
+        inputTopic.pipeInput("DEL003", missingDeliveryId);
 
-        inputTopic.pipeInput("DEL004", """
-                {
-                  "deliveryId": "DEL004",
-                  "truckId": "TRK004",
-                  "numberOfTires": 5,
-                  "destination": "Clermont-Ferrand"
-                }
-                """);
+        inputTopic.pipeInput("DEL004", "KABOOM");
 
-        assertEquals(2, outputTopic.getQueueSize());
-        TestRecord<String, String> first = outputTopic.readRecord();
-        assertEquals("DEL001TRK001", first.key());
+        List<KeyValue<byte[], byte[]>> nullNumberOfTiresResults = nullNumberOfTiresDlqTopic.readKeyValuesToList();
+        assertEquals("DEL001", new String(nullNumberOfTiresResults.getFirst().key));
+        assertEquals(nullNumberOfTires, new String(nullNumberOfTiresResults.getFirst().value));
 
-        TestRecord<String, String> second = outputTopic.readRecord();
-        assertEquals("DEL003TRK003", second.key());
-        assertTrue(outputTopic.isEmpty());
+        List<KeyValue<byte[], byte[]>> invalidDeliveryResults = invalidDeliveryDlqTopic.readKeyValuesToList();
+        assertEquals("DEL002TRK002", new String(invalidDeliveryResults.getFirst().key));
+        assertEquals("Invalid deliveryBooked DEL002", new String(invalidDeliveryResults.getFirst().value));
 
-        assertEquals(1, dlqTopic.getQueueSize());
-        TestRecord<byte[], byte[]> dlqRecord = dlqTopic.readRecord();
-        assertEquals("DEL002", new String(dlqRecord.key()));
+        List<KeyValue<byte[], byte[]>> selectKeyProcessorResults = selectKeyProcessorDlqTopic.readKeyValuesToList();
+        assertEquals("DEL003", new String(selectKeyProcessorResults.getFirst().key));
+        assertEquals(missingDeliveryId, new String(selectKeyProcessorResults.getFirst().value));
+
+        List<KeyValue<byte[], byte[]>> defaultResults = defaultDlqTopic.readKeyValuesToList();
+        assertEquals("DEL004", new String(defaultResults.getFirst().key));
+        assertTrue(new String(defaultResults.getFirst().value).contains("An exception occurred"));
     }
 }
