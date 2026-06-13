@@ -31,6 +31,6 @@ _Soon to be published._
 
 ## Current London 2025
 
-Processing Error Handling (KIP-1034) has been presented at [Current London 2025](https://current.confluent.io/london/agenda):
+Dead Letter Queue in Kafka Streams (KIP-1034) has been presented at [Current London 2025](https://current.confluent.io/london/agenda):
 - Slides are available [here](.readme/Slides_Processing_Exception_Handling.pptx).
 - Replay is available [online](https://current.confluent.io/post-conference-videos-2025/processing-exception-handling-and-dead-letter-queue-in-kafka-streams-lnd25).
