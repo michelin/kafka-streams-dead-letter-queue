@@ -49,7 +49,7 @@ class KafkaStreamsAppTest {
     @BeforeEach
     void setUp() {
         Properties properties = new Properties();
-        properties.setProperty(APPLICATION_ID_CONFIG, "dead-letter-queue-processing-exception-handler-app-test");
+        properties.setProperty(APPLICATION_ID_CONFIG, "dead-letter-queue-processing-exception-handler-test");
         properties.setProperty(BOOTSTRAP_SERVERS_CONFIG, "dummy:1234");
         properties.setProperty(
                 PROCESSING_EXCEPTION_HANDLER_CLASS_CONFIG, CustomProcessingExceptionHandler.class.getName());
