@@ -27,7 +27,7 @@ Code sample for Kafka Streams Dead Letter Queue ([KIP-1034](https://cwiki.apache
 
 ## Michelin IT Blog
 
-_Soon to be published._
+The full article on Kafka Streams Dead Letter Queue is available on the [Michelin IT Blog](https://blogit.michelin.io/dead-letter-queue-in-kafka-streams-kip-1034).
 
 ## Current London 2025
 
