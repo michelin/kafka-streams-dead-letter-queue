@@ -1,5 +1,7 @@
 <div align="center">
 
+This project is a code sample accompanying the [Michelin IT Blog article on Kafka Streams Dead Letter Queue](https://blogit.michelin.io/dead-letter-queue-in-kafka-streams-kip-1034). It has been validated up to Apache Kafka 4.3.1 but will no longer evolve.
+
 <img src=".readme/logo.png" alt="Apache Kafka"/>
 
 # Kafka Streams Dead Letter Queue
